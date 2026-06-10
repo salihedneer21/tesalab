@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TesaLab — Clinical-grade software, engineered exactly</title>
+  <meta name="description" content="TesaLab is a healthcare development platform. We design, build, and run clinical-grade software for health systems and digital-health teams." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231d3a5f'/><polyline points='5,16 11,16 13,10 17,22 19,16 27,16' fill='none' stroke='%234fe3a3' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
+  <script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+
+  <!-- ░░ Navigation ░░ -->
+  <header class="nav" id="nav">
+    <div class="container nav__inner">
+      <a href="#top" class="brand">
+        <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="7" class="brand__field"/>
+          <polyline points="5,16 11,16 13,10 17,22 19,16 27,16" fill="none" stroke="var(--trace)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>TesaLab</span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#work">Work</a>
+        <a href="#services">Services</a>
+        <a href="#platform">Platform</a>
+        <a href="#ai">Applied AI</a>
+        <a href="#process">Process</a>
+        <a href="skeleton.html">3D Skeleton</a>
+      </nav>
+      <a href="#contact" class="btn btn--trace nav__cta">Book a working session</a>
+      <button class="nav__burger" id="burger" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>
+    </div>
+  </header>
+
+  <!-- ░░ Hero ░░ -->
+  <section class="hero" id="top">
+    <canvas id="heroCanvas" class="hero__canvas" aria-hidden="true"></canvas>
+    <div class="container hero__inner">
+      <div class="hero__copy">
+        <h1 class="hero__title">
+          <span class="line"><span>Clinical-grade software,</span></span>
+          <span class="line"><span>engineered exactly.</span></span>
+        </h1>
+        <p class="hero__sub">
+          TesaLab designs, builds, and runs the systems behind modern care —
+          for health systems and digital-health teams who evaluate engineering
+          partners the way they evaluate medical equipment.
+        </p>
+        <div class="hero__actions">
+          <a href="#contact" class="btn btn--trace btn--lg">Book a working session</a>
+          <a href="#work" class="quiet-link">Examine the work</a>
+        </div>
+      </div>
+    </div>
+    <div class="telemetry" role="presentation">
+      <div class="container telemetry__inner">
+        <span class="telemetry__sys"><i class="trace-dot" aria-hidden="true"></i>TESA·MON — SYSTEM LIVE</span>
+        <span class="telemetry__read"><b data-count="120">120</b><em>+</em> products shipped</span>
+        <span class="telemetry__read"><b data-count="38">38</b><em>M</em> patient sessions / yr</span>
+        <span class="telemetry__read"><b data-count="40">40</b><em>+</em> EHR connections</span>
+        <span class="telemetry__read"><b data-count="97">97</b><em>%</em> client retention</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ Clients ░░ -->
+  <section class="clients">
+    <div class="container clients__inner">
+      <p>Engineering partner to</p>
+      <ul>
+        <li>NovaCare Health</li><li>Heliox</li><li>MedRiver</li><li>Cliniq</li><li>PulsePoint</li><li>GenomIQ</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ░░ Case studies — alternating instrument panels ░░ -->
+  <section class="work" id="work">
+    <div class="container">
+      <header class="work__head" data-reveal>
+        <h2>Built with TesaLab</h2>
+        <p>Four systems in production today. Each panel below is live geometry, not a render — the same exactness we put into the products themselves.</p>
+      </header>
+
+      <article class="case" data-reveal="left">
+        <div class="case__panel">
+          <span class="case__chrome"><i class="trace-dot"></i>TESA·MON 01 — MOTION CAPTURE</span>
+          <canvas data-scene="spine" aria-hidden="true"></canvas>
+        </div>
+        <div class="case__copy">
+          <p class="case__field">Remote monitoring · Physical therapy</p>
+          <h3>OrthoTrack</h3>
+          <p>A musculoskeletal recovery companion that tracks at-home rehab through phone-camera motion capture, accurate enough for physical therapists to chart against. Adherence rose <b>62%</b> across the first 11,000 patients, and the app holds a <b>4.8</b> rating with the people who matter most — the ones doing the exercises.</p>
+        </div>
+      </article>
+
+      <article class="case case--flip" data-reveal="right">
+        <div class="case__panel">
+          <span class="case__chrome"><i class="trace-dot"></i>TESA·MON 02 — CODE PIPELINE</span>
+          <canvas data-scene="blocks" aria-hidden="true"></canvas>
+        </div>
+        <div class="case__copy">
+          <p class="case__field">Applied AI · Revenue cycle</p>
+          <h3>CodaMD</h3>
+          <p>An autonomous medical-coding pipeline that drafts CPT and ICD codes directly from clinical notes. <b>85%</b> of encounters now code without human touch, and the audit trail satisfied the client's compliance team on first review — recovering <b>$2.1M</b> in previously missed revenue in year one.</p>
+        </div>
+      </article>
+
+      <article class="case" data-reveal="left">
+        <div class="case__panel">
+          <span class="case__chrome"><i class="trace-dot"></i>TESA·MON 03 — GLOBAL ENROLLMENT</span>
+          <canvas data-scene="globe" aria-hidden="true"></canvas>
+        </div>
+        <div class="case__copy">
+          <p class="case__field">Clinical trials · Decentralized</p>
+          <h3>TrialBridge</h3>
+          <p>eConsent, televisits, and wearable capture in one decentralized-trial platform, now recruiting in <b>14 countries</b>. Sites using TrialBridge enroll <b>3×</b> faster than their paper-based arms — and the data lands clean, because the platform validates it at the point of capture.</p>
+        </div>
+      </article>
+
+      <article class="case case--flip" data-reveal="right">
+        <div class="case__panel">
+          <span class="case__chrome"><i class="trace-dot"></i>TESA·MON 04 — RECORD CONDUIT</span>
+          <canvas data-scene="conduit" aria-hidden="true"></canvas>
+        </div>
+        <div class="case__copy">
+          <p class="case__field">Interoperability · Infrastructure</p>
+          <h3>FlowEHR</h3>
+          <p>A FHIR-first integration engine connecting Epic, Cerner, and Athena to modern patient-facing apps in days instead of quarters. It carries <b>40+</b> EHR connections at <b>99.99%</b> uptime — quiet infrastructure that several of the products above stand on.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ░░ Testimonial — one featured, two supporting ░░ -->
+  <section class="quotes">
+    <div class="container">
+      <blockquote class="quote-lead" data-reveal>
+        <p>“TesaLab understood the clinical workflow before writing a line of code. The product fit our PT practice like a glove — and their compliance documentation was better than some vendors' products.”</p>
+        <footer><b>Dr. Sara Reyes</b> — Chief of Rehabilitation, NovaCare Health</footer>
+      </blockquote>
+      <div class="quote-pair">
+        <blockquote data-reveal>
+          <p>“They shipped our AI coding MVP in eleven weeks and it passed compliance review on the first attempt. Unheard of.”</p>
+          <footer><b>James Mwangi</b> — CEO, CodaMD</footer>
+        </blockquote>
+        <blockquote data-reveal>
+          <p>“Our platform handles thousands of patient sessions a day. TesaLab built it to scale before we knew we'd need it to.”</p>
+          <footer><b>Dr. Lena Park</b> — VP Clinical Operations, TrialBridge</footer>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ Services — ledger ░░ -->
+  <section class="services" id="services">
+    <div class="container">
+      <header class="services__head" data-reveal>
+        <h2>What we take on</h2>
+        <p>Four engagements, one standard of exactness. Every build starts on the TesaLab platform, so compliance is a property of the foundation — not a line item at the end.</p>
+      </header>
+      <div class="ledger" data-reveal>
+        <a class="ledger__row" href="#contact">
+          <h3>Rapid prototyping</h3>
+          <p>Clickable clinical prototypes in two to four weeks, validated with real patients and providers before budget is committed.</p>
+          <span class="ledger__go" aria-hidden="true">→</span>
+        </a>
+        <a class="ledger__row" href="#contact">
+          <h3>Health app development</h3>
+          <p>Native and cross-platform patient and provider applications, engineered for HIPAA, accessibility, and real clinical load.</p>
+          <span class="ledger__go" aria-hidden="true">→</span>
+        </a>
+        <a class="ledger__row" href="#contact">
+          <h3>Data &amp; EHR integration</h3>
+          <p>FHIR and HL7 pipelines, device-data ingestion, and warehouse design that turn fragmented records into usable signal.</p>
+          <span class="ledger__go" aria-hidden="true">→</span>
+        </a>
+        <a class="ledger__row" href="#contact">
+          <h3>AI automation</h3>
+          <p>Clinical copilots, intake triage, documentation agents, and predictive models — deployed safely inside existing workflow.</p>
+          <span class="ledger__go" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ Platform — dark instrument panel ░░ -->
+  <section class="platform" id="platform">
+    <div class="container platform__inner">
+      <div class="platform__copy" data-reveal>
+        <span class="chrome-label"><i class="trace-dot"></i>TESA·MON 05 — PLATFORM CORE</span>
+        <h2>A compliant foundation, from day one</h2>
+        <p>Every engagement starts on infrastructure we already harden and audit, so your team spends its time on product — not plumbing.</p>
+        <ul class="spec-list">
+          <li>HIPAA and SOC 2 controls baked into every environment</li>
+          <li>FHIR-native data layer with forty-plus EHR connectors</li>
+          <li>Consent, audit, and BAA tooling out of the box</li>
+          <li>Device and wearable ingestion — HealthKit, Health Connect, BLE</li>
+          <li>Model-risk review on every AI feature we ship</li>
+        </ul>
+        <a href="#contact" class="btn btn--trace btn--lg">Tour the platform</a>
+      </div>
+      <div class="platform__visual" data-reveal="right">
+        <canvas id="moleculeCanvas" aria-hidden="true"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ Applied AI — tabbed instrument readout ░░ -->
+  <section class="ai" id="ai">
+    <div class="container">
+      <header class="ai__head" data-reveal>
+        <h2>Applied AI, inside the workflow</h2>
+        <p>We deploy models where they pay for themselves — and put a model-risk review in front of anything that touches a patient.</p>
+      </header>
+      <div class="ai__deck" data-reveal>
+        <div class="ai__tabs" role="tablist" aria-label="AI capability areas">
+          <button role="tab" aria-selected="true" id="tab-doc" aria-controls="panel-doc">Clinical documentation</button>
+          <button role="tab" aria-selected="false" id="tab-pred" aria-controls="panel-pred">Predictive analytics</button>
+          <button role="tab" aria-selected="false" id="tab-dec" aria-controls="panel-dec">Decision support</button>
+          <button role="tab" aria-selected="false" id="tab-rev" aria-controls="panel-rev">Revenue cycle</button>
+          <button role="tab" aria-selected="false" id="tab-eng" aria-controls="panel-eng">Patient engagement</button>
+        </div>
+        <div class="ai__panels">
+          <div role="tabpanel" id="panel-doc" aria-labelledby="tab-doc">
+            <h3>Hours back, every week</h3>
+            <p>Ambient scribes and note summarization that draft documentation while the clinician stays with the patient. The output lands in the EHR pre-structured, with every generated sentence traceable to its source audio — because in healthcare, "the model said so" is not a chart entry.</p>
+          </div>
+          <div role="tabpanel" id="panel-pred" aria-labelledby="tab-pred">
+            <h3>Trained on your population</h3>
+            <p>Risk stratification and readmission models built on your own patient data, not a vendor's generic cohort. We validate against your historical outcomes before a single prediction reaches a care team, and we document drift monitoring as part of delivery.</p>
+          </div>
+          <div role="tabpanel" id="panel-dec" aria-labelledby="tab-dec">
+            <h3>Evidence at the point of care</h3>
+            <p>Guideline-aware copilots that surface the right reference at the right moment — inside the chart, not in a separate tab. Every recommendation cites its guideline version, so clinicians can disagree with the machine on the record.</p>
+          </div>
+          <div role="tabpanel" id="panel-rev" aria-labelledby="tab-rev">
+            <h3>Automation that pays for itself</h3>
+            <p>Autonomous coding, denial prediction, and prior-authorization drafting. This is where AI in healthcare earns trust fastest: the ground truth arrives within weeks, the ROI is a number your CFO can audit, and nobody's safety depends on it while you build confidence.</p>
+          </div>
+          <div role="tabpanel" id="panel-eng" aria-labelledby="tab-eng">
+            <h3>Outreach patients answer</h3>
+            <p>Conversational intake, smart scheduling reminders, and care-plan nudges tuned to each patient's channel and reading level. Engagement is a clinical outcome — a missed appointment is a missed intervention.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ Process — an actual sequence ░░ -->
+  <section class="process" id="process">
+    <div class="container">
+      <header class="process__head" data-reveal>
+        <h2>Four phases, one team</h2>
+      </header>
+      <ol class="process__steps">
+        <li data-reveal><span class="process__n">1</span><h3>Discover</h3><p>Clinical workflow mapping, stakeholder interviews, regulatory scoping. We learn how care actually happens before proposing how software should.</p></li>
+        <li data-reveal><span class="process__n">2</span><h3>Prototype</h3><p>High-fidelity prototypes tested with real patients and providers, so the expensive decisions are made on evidence.</p></li>
+        <li data-reveal><span class="process__n">3</span><h3>Build</h3><p>Agile sprints on the TesaLab platform, with working software demonstrated every week — not slideware.</p></li>
+        <li data-reveal><span class="process__n">4</span><h3>Run</h3><p>Launch, monitor, iterate. SLAs, on-call engineering, and a roadmap that grows with your clinical reality.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ░░ CTA — instrument panel ░░ -->
+  <section class="cta" id="contact">
+    <canvas id="ctaCanvas" class="cta__canvas" aria-hidden="true"></canvas>
+    <div class="container cta__inner" data-reveal>
+      <span class="chrome-label"><i class="trace-dot"></i>TESA·MON 06 — INTAKE</span>
+      <h2>Bring us the hard one.</h2>
+      <p>Tell us about the product everyone else said was too regulated, too integrated, or too clinical. We'll reply within one business day with an honest read on scope, timeline, and budget.</p>
+      <form class="cta__form" onsubmit="event.preventDefault(); this.querySelector('button').textContent='Received — we\'ll reply within one business day.';">
+        <label class="visually-hidden" for="cta-email">Work email</label>
+        <input id="cta-email" type="email" placeholder="you@healthsystem.org" required />
+        <button type="submit" class="btn btn--trace btn--lg">Book a working session</button>
+      </form>
+      <p class="cta__note">Thirty minutes with an engineer, not a salesperson. No deck.</p>
+    </div>
+  </section>
+
+  <!-- ░░ Footer ░░ -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="#top" class="brand brand--light">
+          <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="7" class="brand__field"/>
+            <polyline points="5,16 11,16 13,10 17,22 19,16 27,16" fill="none" stroke="var(--trace)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>TesaLab</span>
+        </a>
+        <p>The healthcare development platform.<br />San Diego · Boston · Remote worldwide.</p>
+      </div>
+      <nav class="footer__col" aria-label="Services"><h4>Services</h4><a href="#services">Prototyping</a><a href="#services">App development</a><a href="#services">EHR integration</a><a href="#ai">AI automation</a></nav>
+      <nav class="footer__col" aria-label="Company"><h4>Company</h4><a href="#work">Work</a><a href="#process">Process</a><a href="#platform">Platform</a><a href="#contact">Contact</a></nav>
+      <nav class="footer__col" aria-label="Legal"><h4>Legal</h4><a href="#">Privacy</a><a href="#">Security</a><a href="#">BAA</a><a href="#">Terms</a></nav>
+    </div>
+    <div class="container footer__bottom">
+      <span>© 2026 TesaLab, Inc.</span>
+      <span class="footer__status"><i class="trace-dot"></i>All systems operational</span>
+    </div>
+  </footer>
+
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+  </script>
+  <script type="module" src="js/three-scenes.js"></script>
+  <script src="js/main.js" defer></script>
+</body>
+</html>
