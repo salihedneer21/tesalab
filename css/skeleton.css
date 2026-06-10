@@ -99,7 +99,8 @@ body { background: var(--field); overflow: hidden; }
 #spin.active { background: var(--trace); border-color: var(--trace); color: var(--trace-ink); }
 
 .slider { display: block; margin-bottom: 14px; }
-.slider span { display: block; font-size: 0.82rem; color: var(--on-field-2); margin-bottom: 7px; }
+.slider span { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.82rem; color: var(--on-field-2); margin-bottom: 7px; }
+.slider span b { color: var(--trace); font-weight: 700; font-variant-numeric: tabular-nums; }
 .slider input[type="range"] {
   width: 100%; height: 4px; border-radius: 4px; appearance: none;
   background: var(--field-line); outline: none; cursor: pointer;

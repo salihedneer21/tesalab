@@ -78,6 +78,17 @@
       </section>
 
       <section class="panel__group">
+        <h2>Body composition</h2>
+        <div class="chip-row">
+          <button id="body-toggle" class="chip chip--trace active">Body: on</button>
+        </div>
+        <label class="slider"><span>Sex — female ↔ male <b id="v-gender">50%</b></span><input type="range" id="sl-gender" min="0" max="100" value="50" /></label>
+        <label class="slider"><span>Height <b id="v-height">170 cm</b></span><input type="range" id="sl-height" min="150" max="205" value="170" /></label>
+        <label class="slider"><span>Muscle <b id="v-muscle">35</b></span><input type="range" id="sl-muscle" min="0" max="100" value="35" /></label>
+        <label class="slider"><span>Body fat <b id="v-fat">25</b></span><input type="range" id="sl-fat" min="0" max="100" value="25" /></label>
+      </section>
+
+      <section class="panel__group">
         <h2>Adjust joints <small>(mirrored both sides)</small></h2>
         <label class="slider"><span>Shoulder — raise</span><input type="range" id="sl-shoulder" min="-160" max="40" value="0" /></label>
         <label class="slider"><span>Shoulder — swing</span><input type="range" id="sl-swing" min="-60" max="90" value="0" /></label>
