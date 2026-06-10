@@ -30,12 +30,9 @@
   <main class="viewer">
     <!-- 3D stage -->
     <div class="stage" id="stage">
-      <div class="loading" id="loading"><span>Loading skeleton — 0%</span></div>
-      <div class="hint" id="hint">Drag to rotate · scroll to zoom · click a bone to identify</div>
-      <div class="readout" id="readout">
-        <b id="id-name">Tap any bone</b>
-        <em id="id-sub">Click a bone to identify it</em>
-      </div>
+      <div class="loading" id="loading"><span>Building body — 0%</span></div>
+      <div class="hint" id="hint">Drag to rotate · scroll to zoom · tap the body to pin a label</div>
+      <div class="labels" id="labels"></div>
       <button class="panel-toggle" id="panel-toggle" aria-label="Toggle controls">Controls</button>
     </div>
 
@@ -100,14 +97,16 @@
 
       <section class="panel__group">
         <h2>Display</h2>
-        <label class="slider"><span>X-ray opacity</span><input type="range" id="opacity" min="15" max="100" value="100" /></label>
+        <label class="slider"><span>Skin opacity <b id="v-skin">100%</b></span><input type="range" id="opacity" min="10" max="100" value="100" /></label>
         <div class="chip-row">
+          <button id="skel-toggle" class="chip">Skeleton: off</button>
           <button id="spin" class="chip">Auto-rotate</button>
+          <button id="clear-labels" class="chip">Clear labels</button>
           <button id="reset" class="chip">Reset all</button>
         </div>
       </section>
 
-      <p class="panel__credit">Model: BodyParts3D / Z-Anatomy “overview skeleton,” adapted via Open3DModel. Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. Right hemi-skeleton mirrored to a full body; limbs rigged for posing.</p>
+      <p class="panel__credit">Smooth body is procedurally generated (metaball field) over a real skeleton — BodyParts3D / Z-Anatomy “overview skeleton” via Open3DModel, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. Anatomical approximation, not a medical scan.</p>
     </aside>
   </main>
 

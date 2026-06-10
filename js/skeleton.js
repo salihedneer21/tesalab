@@ -9,6 +9,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { MarchingCubes } from "three/addons/objects/MarchingCubes.js";
 
 const TRACE = 0x4fe3a3;
 const BONE = 0xe9e1cf;
@@ -253,6 +254,7 @@ loader.load(
     /* --- procedural soft-tissue body (muscle / fat / height / sex) --- */
     buildBody();
     updateBody();
+    setSkeleton(false); // body is the subject; bones become an optional X-ray
 
     /* --- frame the model --- */
     modelBox.setFromObject(modelRoot);
@@ -265,6 +267,11 @@ loader.load(
     loadingEl.classList.add("done");
     resize();
     setView("full", true);
+
+    // default to a relaxed A-pose so arms read as separate from the torso
+    pose.shoulderR = -16;
+    applyPose();
+    { const el = document.getElementById("sl-shoulder"); if (el) el.value = -16; }
 
     // optional shareable state via URL hash, e.g. #pose=sitting&muscle=80&fat=10&height=190&sex=90
     const hash = location.hash;
@@ -291,7 +298,7 @@ loader.load(
   (xhr) => {
     if (xhr.total) {
       const pct = Math.round((xhr.loaded / xhr.total) * 100);
-      loadingEl.querySelector("span").textContent = `Loading skeleton — ${pct}%`;
+      loadingEl.querySelector("span").textContent = `Building body — ${pct}%`;
     }
   },
   (err) => {
@@ -301,44 +308,71 @@ loader.load(
 );
 
 /* ════════════════════════════════════════════
-   Procedural soft-tissue body
-   Translucent flesh volumes wrapped around the
-   skeleton, driven by sex / height / muscle / fat.
+   Smooth procedural body (MarchingCubes metaballs)
+   One organic skin surface re-melded over the
+   skeleton every change, driven by the sliders.
    ════════════════════════════════════════════ */
 const REF_HEIGHT = 170; // cm — the model's natural height
 const bodyParams = { gender: 50, height: REF_HEIGHT, muscle: 35, fat: 25 };
 let bodyVisible = true;
 let heightScale = 1;
-const UP = new THREE.Vector3(0, 1, 0);
-const bodyGroup = new THREE.Group();
-bodyGroup.name = "Body";
-scene.add(bodyGroup);
-const limbSegs = [];   // { prox, dist, mesh, kind }
-const staticParts = []; // { kind, mesh, center, size }
+let bodyDirty = false;
+const vWorld = (o) => o.getWorldPosition(new THREE.Vector3());
+
+// MarchingCubes field: ball coords are [0,1]; the mesh renders local [-1,1].
+const MC_RES = 72;
+const MC_SUB = 12;             // subtract term (falloff)
+const MC_SCALE = 1.22;         // half the field cube side, in world metres
+const MC_POS = new THREE.Vector3(0, 1.0, 0);
+let mc = null;
+const limbChains = [];   // { prox, dist, kind }
+const torsoAnchors = []; // { kind, center, size }
 
 function skinMaterial() {
   return new THREE.MeshStandardMaterial({
-    color: 0xd9a98f, roughness: 0.85, metalness: 0.0,
-    transparent: true, opacity: 0.5, depthWrite: false,
+    color: 0xcf9e7f, roughness: 0.62, metalness: 0.02,
+    transparent: true, opacity: 1, depthWrite: true,
   });
 }
-const vWorld = (o) => o.getWorldPosition(new THREE.Vector3());
 
-function limbRadius(kind, m, f) {
+// world → [0,1] ball coords for the fixed field cube
+function worldToBall(p) {
+  return new THREE.Vector3(
+    (p.x - MC_POS.x) / (2 * MC_SCALE) + 0.5,
+    (p.y - MC_POS.y) / (2 * MC_SCALE) + 0.5,
+    (p.z - MC_POS.z) / (2 * MC_SCALE) + 0.5
+  );
+}
+function addBallWorld(p, rWorld) {
+  const c = worldToBall(p);
+  if (c.x < 0 || c.x > 1 || c.y < 0 || c.y > 1 || c.z < 0 || c.z > 1) return;
+  const rn = rWorld / (2 * MC_SCALE);
+  const strength = rn * rn * (mc.isolation + MC_SUB);
+  mc.addBall(c.x, c.y, c.z, strength, MC_SUB);
+}
+
+function limbProfile(kind, m, f) {
+  // [proximal radius, distal radius] in world metres (nominal; field overlap adds ~25%)
   switch (kind) {
-    case "upperarm": return 0.045 + m * 0.024 + f * 0.014;
-    case "forearm":  return 0.034 + m * 0.014 + f * 0.010;
-    case "thigh":    return 0.072 + m * 0.030 + f * 0.024;
-    case "calf":     return 0.047 + m * 0.018 + f * 0.014;
+    case "upperarm": return [0.042 + m * 0.020 + f * 0.013, 0.032 + m * 0.013 + f * 0.010];
+    case "forearm":  return [0.033 + m * 0.013 + f * 0.010, 0.023 + m * 0.006 + f * 0.007];
+    case "thigh":    return [0.064 + m * 0.022 + f * 0.024, 0.044 + m * 0.014 + f * 0.016];
+    case "calf":     return [0.043 + m * 0.016 + f * 0.013, 0.026 + m * 0.006 + f * 0.010];
   }
-  return 0.04;
+  return [0.04, 0.04];
 }
 
 function buildBody() {
+  mc = new MarchingCubes(MC_RES, skinMaterial(), false, false, 120000);
+  mc.isolation = 140;
+  mc.position.copy(MC_POS);
+  mc.scale.setScalar(MC_SCALE);
+  mc.name = "Body";
+  scene.add(mc);
+
   const cj = {};
   for (const p of pivotPairs) cj[p.right.name] = p.left;
   const leftOf = (rp) => cj[rp.name];
-
   const limbDefs = [
     ["shoulderR", "elbowR", "upperarm"],
     ["elbowR", "wristR", "forearm"],
@@ -350,81 +384,115 @@ function buildBody() {
     for (const side of ["R", "L"]) {
       const prox = side === "R" ? joints[a].pivot : leftOf(joints[a].pivot);
       const dist = side === "R" ? joints[b].pivot : leftOf(joints[b].pivot);
-      if (!prox || !dist) continue;
-      const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.1, 6, 14), skinMaterial());
-      bodyGroup.add(mesh);
-      limbSegs.push({ prox, dist, mesh, kind });
+      if (prox && dist) limbChains.push({ prox, dist, kind });
     }
   }
 
-  // static (un-posed) volumes from bone bounding boxes, in modelRoot space at scale 1
+  // static torso landmarks from bone boxes (modelRoot space at scale 1)
   const skull = boxOf(modelRoot, isSkull);
   const ribs = boxOf(modelRoot, (n) => /rib|sternum|manubrium/.test(norm(n)));
   const pelvis = boxOf(modelRoot, (n) => /hip bone|sacrum/.test(norm(n)));
   const C = (b) => b.getCenter(new THREE.Vector3());
-  const S = (b) => b.getSize(new THREE.Vector3());
-
-  const addStatic = (kind, center, size) => {
-    const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 18), skinMaterial());
-    bodyGroup.add(mesh);
-    staticParts.push({ kind, mesh, center, size });
-  };
-  if (skull) addStatic("head", C(skull), S(skull));
+  const Sz = (b) => b.getSize(new THREE.Vector3());
+  if (skull) torsoAnchors.push({ kind: "head", center: C(skull), size: Sz(skull) });
+  if (skull && ribs) torsoAnchors.push({ kind: "neck", center: new THREE.Vector3(0, skull.min.y - 0.015, C(skull).z), size: Sz(ribs) });
   if (ribs) {
-    const c = C(ribs), s = S(ribs);
-    addStatic("chest", new THREE.Vector3(0, c.y + s.y * 0.18, c.z), s);
-    addStatic("abdomen", new THREE.Vector3(0, c.y - s.y * 0.35, c.z), s);
+    const c = C(ribs), s = Sz(ribs);
+    torsoAnchors.push({ kind: "chestTop", center: new THREE.Vector3(0, c.y + s.y * 0.30, c.z), size: s });
+    torsoAnchors.push({ kind: "chest", center: new THREE.Vector3(0, c.y + s.y * 0.05, c.z), size: s });
+    torsoAnchors.push({ kind: "abdomen", center: new THREE.Vector3(0, c.y - s.y * 0.32, c.z), size: s });
   }
-  if (pelvis) addStatic("hips", C(pelvis), S(pelvis));
-  if (skull && ribs) {
-    const nc = new THREE.Vector3(0, skull.min.y - 0.02, C(skull).z);
-    addStatic("neck", nc, new THREE.Vector3(0.1, 0.1, 0.1));
-  }
+  if (pelvis) torsoAnchors.push({ kind: "hips", center: C(pelvis), size: Sz(pelvis) });
+  // shoulder + hip joint balls knit the limbs to the trunk
 }
 
-function updateBody() {
-  if (!staticParts.length && !limbSegs.length) return;
+function rebuildField() {
+  if (!mc) return;
   heightScale = bodyParams.height / REF_HEIGHT;
   modelRoot.scale.setScalar(heightScale);
+  modelRoot.updateMatrixWorld(true);
+  syncMirror();
   modelRoot.updateMatrixWorld(true);
 
   const m = bodyParams.muscle / 100;
   const f = bodyParams.fat / 100;
   const g = bodyParams.gender / 100; // 0 female · 1 male
+  const hs = heightScale;
 
-  for (const s of staticParts) {
-    const z = s.size;
-    let r;
-    switch (s.kind) {
-      case "head": r = new THREE.Vector3(z.x * 0.55, z.y * 0.6, z.z * 0.62).addScalar(f * 0.006); break;
-      case "chest": r = new THREE.Vector3(z.x * 0.5 * (0.9 + g * 0.14) + m * 0.03, z.y * 0.34, z.z * 0.6 + m * 0.018 + f * 0.022); break;
-      case "abdomen": r = new THREE.Vector3(z.x * 0.40 + f * 0.055 - m * 0.01, z.y * 0.5, z.z * 0.45 + f * 0.07); break;
-      case "hips": r = new THREE.Vector3(z.x * 0.5 * (1.0 + (1 - g) * 0.18) + f * 0.045, z.y * 0.58, z.z * 0.62 + f * 0.03); break;
-      case "neck": r = new THREE.Vector3(0.045 + m * 0.008 + f * 0.004, 0.07, 0.045 + m * 0.006); break;
-      default: r = new THREE.Vector3(0.05, 0.05, 0.05);
+  mc.reset();
+
+  // limbs — dense balls along each bone segment, tapered proximal → distal
+  for (const ch of limbChains) {
+    const p = vWorld(ch.prox), q = vWorld(ch.dist);
+    const [rp, rd] = limbProfile(ch.kind, m, f);
+    const len = p.distanceTo(q);
+    const steps = Math.max(2, Math.ceil(len / (rp * 1.1 * hs))); // ~1 ball per radius
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const pos = p.clone().lerp(q, t);
+      addBallWorld(pos, (rp + (rd - rp) * t) * hs);
     }
-    s.mesh.scale.copy(r).multiplyScalar(heightScale);
-    s.mesh.position.copy(s.center).multiplyScalar(heightScale);
   }
 
-  for (const seg of limbSegs) {
-    const r = limbRadius(seg.kind, m, f) * heightScale;
-    const len = Math.max(0.02, vWorld(seg.prox).distanceTo(vWorld(seg.dist)) - 2 * r);
-    seg.mesh.geometry.dispose();
-    seg.mesh.geometry = new THREE.CapsuleGeometry(r, len, 6, 14);
+  // shoulder + hip junction balls (connect limbs to trunk)
+  const cj = {};
+  for (const p of pivotPairs) cj[p.right.name] = p.left;
+  for (const key of ["shoulderR", "hipR"]) {
+    const j = joints[key];
+    if (!j) continue;
+    const r = key === "shoulderR" ? (0.06 + m * 0.02 + f * 0.015) : (0.09 + (1 - g) * 0.02 + f * 0.03);
+    addBallWorld(vWorld(j.pivot), r * hs);
+    const tw = cj["PIVOT_" + key];
+    if (tw) addBallWorld(vWorld(tw), r * hs);
   }
-  bodyGroup.visible = bodyVisible;
-  followBody();
+
+  // hands + feet caps so limbs don't taper to points
+  for (const side of ["R", "L"]) {
+    const get = (n) => (side === "R" ? joints[n] && joints[n].pivot : cj["PIVOT_" + n]);
+    const wr = get("wristR"), el = get("elbowR");
+    if (wr && el) {
+      const w = vWorld(wr), dir = w.clone().sub(vWorld(el)).normalize();
+      addBallWorld(w.clone().add(dir.clone().multiplyScalar(0.03 * hs)), (0.05 + f * 0.012) * hs);
+      addBallWorld(w.clone().add(dir.clone().multiplyScalar(0.10 * hs)), (0.040 + f * 0.008) * hs);
+    }
+    const an = get("ankleR");
+    if (an) {
+      const a = vWorld(an);
+      addBallWorld(a, (0.05 + f * 0.01) * hs);
+      addBallWorld(a.clone().add(new THREE.Vector3(0, -0.025 * hs, 0.07 * hs)), 0.046 * hs);
+      addBallWorld(a.clone().add(new THREE.Vector3(0, -0.035 * hs, 0.14 * hs)), 0.038 * hs);
+    }
+  }
+
+  // torso / head — overlapping balls along the trunk
+  for (const a of torsoAnchors) {
+    const z = a.size;
+    const c = a.center.clone().multiplyScalar(hs);
+    let r, halfW = 0;
+    switch (a.kind) {
+      case "head": r = (z.x * 0.44 + 0.008 + f * 0.005) * hs; break;
+      case "neck": r = (0.044 + m * 0.006 + f * 0.005) * hs; break;
+      case "chestTop": r = (z.x * 0.30 * (0.92 + g * 0.18) + m * 0.014) * hs; halfW = (z.x * 0.15 * (0.9 + g * 0.22)) * hs; break;
+      case "chest": r = (z.x * 0.28 * (0.9 + g * 0.12) + m * 0.016 + f * 0.014) * hs; halfW = (z.x * 0.12) * hs; break;
+      case "abdomen": r = (z.x * 0.23 + f * 0.05 - m * 0.006) * hs; halfW = (z.x * 0.075 + f * 0.014) * hs; break;
+      case "hips": r = (z.x * 0.22 * (1 + (1 - g) * 0.18) + f * 0.034) * hs; halfW = (z.x * 0.15 * (1 + (1 - g) * 0.22) + f * 0.02) * hs; break;
+      default: r = 0.05 * hs;
+    }
+    if (halfW > 0.001) {
+      // two side-by-side balls give the trunk width without ballooning depth
+      addBallWorld(c.clone().add(new THREE.Vector3(halfW, 0, 0)), r);
+      addBallWorld(c.clone().add(new THREE.Vector3(-halfW, 0, 0)), r);
+    } else {
+      addBallWorld(c, r);
+    }
+  }
+
+  mc.update();
+  mc.visible = bodyVisible;
 }
 
-function followBody() {
-  if (!bodyVisible) return;
-  for (const seg of limbSegs) {
-    const p = vWorld(seg.prox), q = vWorld(seg.dist);
-    seg.mesh.position.copy(p).add(q).multiplyScalar(0.5);
-    seg.mesh.quaternion.setFromUnitVectors(UP, q.sub(p).normalize());
-  }
-}
+function updateBody() { bodyDirty = true; }
+function followBody() { if (bodyDirty) { rebuildField(); bodyDirty = false; } }
 
 /* ── pose application ──────────────────────── */
 const pose = { shoulderR: 0, shoulderSwing: 0, shoulderAdduct: 0, elbowR: 0, wristR: 0, hipR: 0, kneeR: 0 };
@@ -450,6 +518,7 @@ function applyPose() {
   set("wristR", "x", pose.wristR);
   set("hipR", "x", pose.hipR);
   set("kneeR", "x", pose.kneeR);
+  bodyDirty = true; // re-meld the skin to the new pose
 }
 
 function syncMirror() {
@@ -495,10 +564,27 @@ function setView(view, instant = false) {
   focusBox(box || whole, view === "full" ? 1.25 : 1.7, instant);
 }
 
-/* ── interaction: click to identify ────────── */
+/* ── interaction: click to pin a 3D label ──── */
 const raycaster = new THREE.Raycaster();
 const ptr = new THREE.Vector2();
 let down = null;
+const pins = [];                 // { bone, local: Vector3, el }
+const labelLayer = document.getElementById("labels");
+const projV = new THREE.Vector3();
+
+// raycast the bones (the ray passes through the skin to the bone beneath).
+// the raycaster skips invisible objects, so temporarily reveal bones for the
+// synchronous cast — no render happens in between, so the user never sees them.
+function raycastBones() {
+  camera.updateMatrixWorld();
+  modelRoot.updateMatrixWorld(true);
+  const restore = !skeletonVisible;
+  if (restore) for (const m of allMeshes) m.visible = true;
+  raycaster.setFromCamera(ptr, camera);
+  const hits = raycaster.intersectObjects(allMeshes, false);
+  if (restore) for (const m of allMeshes) m.visible = false;
+  return hits;
+}
 
 renderer.domElement.addEventListener("pointerdown", (e) => { down = { x: e.clientX, y: e.clientY }; });
 renderer.domElement.addEventListener("pointerup", (e) => {
@@ -509,21 +595,41 @@ renderer.domElement.addEventListener("pointerup", (e) => {
   const r = renderer.domElement.getBoundingClientRect();
   ptr.x = ((e.clientX - r.left) / r.width) * 2 - 1;
   ptr.y = -((e.clientY - r.top) / r.height) * 2 + 1;
-  raycaster.setFromCamera(ptr, camera);
-  const hits = raycaster.intersectObjects(allMeshes, false);
-  if (hits.length) identify(hits[0].object);
+  const hits = raycastBones();
+  if (hits.length) pinLabel(hits[0].object, hits[0].point);
 });
 
-function identify(mesh) {
-  if (highlighted) highlighted.material.emissive.setHex(0x000000);
-  highlighted = mesh;
-  mesh.material.emissive.setHex(TRACE);
-  mesh.material.emissiveIntensity = 0.55;
+function pinLabel(mesh, worldPoint) {
   const bone = mesh.userData.boneName || mesh.name;
-  idName.textContent = prettyName(bone);
   const reg = meshRegion.get(mesh) || "axial";
-  const paired = /\.r\.?$/i.test(bone);
-  idSub.textContent = `Region: ${reg}${paired ? " · paired (left & right)" : ""}`;
+  const el = document.createElement("button");
+  el.className = "pin";
+  el.innerHTML = `<span class="pin__dot"></span><span class="pin__name">${prettyName(bone)}</span><span class="pin__reg">${reg}</span>`;
+  el.title = "Remove label";
+  el.addEventListener("click", () => {
+    const i = pins.findIndex((p) => p.el === el);
+    if (i >= 0) { pins.splice(i, 1); el.remove(); }
+  });
+  labelLayer.appendChild(el);
+  pins.push({ bone: mesh, local: mesh.worldToLocal(worldPoint.clone()), el });
+}
+
+function clearPins() {
+  pins.forEach((p) => p.el.remove());
+  pins.length = 0;
+}
+
+function updateLabels() {
+  if (!pins.length) return;
+  const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
+  for (const p of pins) {
+    p.bone.localToWorld(projV.copy(p.local));
+    projV.project(camera);
+    const behind = projV.z > 1;
+    if (behind) { p.el.style.display = "none"; continue; }
+    p.el.style.display = "";
+    p.el.style.transform = `translate(-50%, -120%) translate(${(projV.x * 0.5 + 0.5) * w}px, ${(-projV.y * 0.5 + 0.5) * h}px)`;
+  }
 }
 
 /* ── region isolation ──────────────────────── */
@@ -539,11 +645,18 @@ function setRegion(region) {
   }
 }
 
-/* ── X-ray opacity ─────────────────────────── */
+/* ── skin opacity + skeleton visibility ────── */
 let globalOpacity = 1;
-function setOpacity(v) {
-  globalOpacity = v;
-  setRegion(activeRegion);
+let skeletonVisible = false;
+function setSkinOpacity(v) {
+  if (!mc) return;
+  mc.material.opacity = v;
+  mc.material.transparent = v < 0.99;
+  mc.material.depthWrite = v >= 0.99;
+}
+function setSkeleton(v) {
+  skeletonVisible = v;
+  for (const m of allMeshes) m.visible = v;
 }
 
 /* ── animation loop ────────────────────────── */
@@ -569,6 +682,7 @@ function animate() {
   controls.update();
   syncMirror();
   followBody();
+  updateLabels();
   renderer.render(scene, camera);
 }
 animate();
@@ -649,10 +763,18 @@ Object.entries(bodySliders).forEach(([key, cfg]) => {
 const bodyToggle = document.getElementById("body-toggle");
 if (bodyToggle) bodyToggle.addEventListener("click", () => {
   bodyVisible = !bodyVisible;
-  bodyGroup.visible = bodyVisible;
+  if (mc) mc.visible = bodyVisible;
   bodyToggle.classList.toggle("active", bodyVisible);
   bodyToggle.textContent = bodyVisible ? "Body: on" : "Body: off";
 });
+const skelToggle = document.getElementById("skel-toggle");
+if (skelToggle) skelToggle.addEventListener("click", () => {
+  setSkeleton(!skeletonVisible);
+  skelToggle.classList.toggle("active", skeletonVisible);
+  skelToggle.textContent = skeletonVisible ? "Skeleton: on" : "Skeleton: off";
+});
+const clearBtn = document.getElementById("clear-labels");
+if (clearBtn) clearBtn.addEventListener("click", clearPins);
 
 function resetBody() {
   Object.assign(bodyParams, { gender: 50, height: REF_HEIGHT, muscle: 35, fat: 25 });
@@ -662,12 +784,17 @@ function resetBody() {
     if (el) { el.value = bodyParams[key]; if (out) out.textContent = cfg.fmt(el.value); }
   });
   bodyVisible = true;
+  if (mc) mc.visible = true;
   if (bodyToggle) { bodyToggle.classList.add("active"); bodyToggle.textContent = "Body: on"; }
   updateBody();
 }
 
 // display toggles
-document.getElementById("opacity").addEventListener("input", (e) => setOpacity(+e.target.value / 100));
+document.getElementById("opacity").addEventListener("input", (e) => {
+  setSkinOpacity(+e.target.value / 100);
+  const out = document.getElementById("v-skin");
+  if (out) out.textContent = `${e.target.value}%`;
+});
 const spinBtn = document.getElementById("spin");
 spinBtn.addEventListener("click", () => {
   controls.autoRotate = !controls.autoRotate;
@@ -680,11 +807,11 @@ document.getElementById("reset").addEventListener("click", () => {
   document.querySelectorAll("[data-region]").forEach((x) => x.classList.toggle("active", x.dataset.region === "all"));
   setView("full");
   document.querySelectorAll("[data-view]").forEach((x) => x.classList.toggle("active", x.dataset.view === "full"));
-  document.getElementById("opacity").value = 100; setOpacity(1);
+  document.getElementById("opacity").value = 100; setSkinOpacity(1);
+  setSkeleton(false);
+  if (skelToggle) { skelToggle.classList.remove("active"); skelToggle.textContent = "Skeleton: off"; }
   resetBody();
-  if (highlighted) { highlighted.material.emissive.setHex(0x000000); highlighted = null; }
-  idName.textContent = "Tap any bone";
-  idSub.textContent = "Click a bone to identify it";
+  clearPins();
 });
 
 // mobile panel toggle

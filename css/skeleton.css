@@ -60,14 +60,26 @@ body { background: var(--field); overflow: hidden; }
 }
 @keyframes hint-fade { to { opacity: 0; } }
 
-.readout {
-  position: absolute; bottom: 18px; left: 18px;
-  background: oklch(0.22 0.06 252 / 0.82); border: 1px solid var(--field-line);
-  border-radius: 10px; padding: 13px 18px; backdrop-filter: blur(8px);
-  min-width: 220px; max-width: 70%;
+/* 3D-pinned labels */
+.labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.pin {
+  position: absolute; top: 0; left: 0; will-change: transform;
+  display: flex; align-items: center; gap: 7px;
+  font: 600 0.8rem var(--font); color: var(--on-field);
+  background: oklch(0.2 0.06 252 / 0.86); border: 1px solid var(--trace);
+  border-radius: 8px; padding: 6px 11px 6px 9px;
+  backdrop-filter: blur(8px); cursor: pointer; pointer-events: auto;
+  box-shadow: 0 6px 20px oklch(0.1 0.05 252 / 0.5);
+  transition: opacity 0.2s, border-color 0.2s;
+  animation: pin-in 0.3s var(--ease-out);
 }
-.readout b { display: block; font-size: 1.05rem; font-weight: 700; color: var(--on-field); }
-.readout em { font-style: normal; font-size: 0.8rem; color: var(--on-field-2); }
+.pin:hover { border-color: #fff; }
+.pin::after { content: "×"; margin-left: 4px; color: var(--on-field-2); font-weight: 700; }
+.pin:hover::after { color: #fff; }
+.pin__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--trace); box-shadow: 0 0 0 3px oklch(0.87 0.19 152 / 0.25); flex: none; }
+.pin__name { font-weight: 700; }
+.pin__reg { font-size: 0.72rem; color: var(--on-field-2); text-transform: capitalize; }
+@keyframes pin-in { from { opacity: 0; transform-origin: center; } }
 
 /* control panel */
 .panel {
